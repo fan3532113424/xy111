@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', '幼圆', '微软雅黑', sans-serif;
+        }
+
+        body {
+            background: center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡通装饰元素（和主页风格统一） */
+        .float-decor {
+            position: absolute;
+            z-index: 1;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg) scale(1.1);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.6;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0.6;
+                transform: scale(0.8);
+            }
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 248, 220, 0.3), rgba(255, 228, 196, 0.4));
+            z-index: -1;
+        }
+
+        /* 登录容器优化（透明度60%，更清晰） */
+        .login-container {
+            background: rgba(255, 250, 205, 0.6); /* 透明度60% */
+            padding: 45px 40px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 420px;
+            border: 6px solid #FFD700; /* 金色边框 */
+            box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            position: relative;
+            z-index: 2;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 30px #FFD700, 0 0 50px rgba(255, 165, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            }
+        }
+
+        /* 标题优化（卡通风格+动画） */
+        .login-title {
+            font-size: 32px;
+            color: #8B4513; /* 棕色调文字 */
+            text-align: center;
+            margin-bottom: 35px;
+            text-shadow: 3px 3px 6px #FFD700;
+            animation: bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        /* 标签优化（暖色调） */
+        .form-label {
+            display: block;
+            color: #8B4513;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #FFE4B5;
+        }
+
+        /* 输入框优化（透明度60%，提升可读性） */
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 4px solid #A0522D; /* 棕色边框 */
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.6); /* 透明度60% */
+            color: #8B4513;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #A0522D;
+            opacity: 0.7;
+        }
+
+        .form-input:focus {
+            outline: none;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(212, 175, 55, 0.5);
+            border-color: #FFD700;
+        }
+
+        /* 登录按钮优化（渐变+卡通风格） */
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            color: #8B4513;
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 15px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #fff;
+            box-shadow: 0 6px 12px rgba(160, 82, 45, 0.2);
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #FFC107, #FFD700);
+            transform: translateY(-5px) rotate(1deg) scale(1.02);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.7);
+            border-color: #A0522D;
+        }
+
+        .login-btn:active {
+            transform: translateY(-2px) rotate(0deg) scale(0.98);
+        }
+
+        /* 注册链接优化 */
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+
+        .register-link a {
+            color: #8B4513;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px #FFE4B5;
+        }
+
+        .register-link a:hover {
+            color: #A0522D;
+            text-decoration: underline;
+            transform: scale(1.05);
+            display: inline-block;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 375px) {
+            .login-container {
+                padding: 35px 25px;
+                border-width: 4px;
+            }
+
+            .login-title {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+            .form-input {
+                padding: 12px;
+                font-size: 16px;
+                border-width: 3px;
+            }
+
+            .login-btn {
+                padding: 12px;
+                font-size: 18px;
+                border-width: 3px;
+            }
+
+            .register-link {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2 class="login-title">🌱 登录校园植被 🌱</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label class="form-label" for="username">用户名</label>
+            <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="password">密码</label>
+            <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="login-btn">✨ 立即登录 ✨</button>
+        <div class="register-link">
+            还没有账号？<a href="zc.html">🐾 立即注册 🐾</a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Supabase配置 - 使用您提供的正确配置
+    const SUPABASE_URL = 'https://sgwbztuizxowiacpwzmy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnd2J6dHVpenhvd2lhY3B3em15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzIyMDYsImV4cCI6MjA3OTkwODIwNn0.js6fUBJ9FGRMkVgp80Q-8D6hX-xXbr29rWKyJgOA9b4';
+
+    // 创建 Supabase 客户端
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    console.log('Supabase 初始化完成:', supabase);
+
+    const loginForm = document.getElementById('loginForm');
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('登录表单提交');
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            alert('😥 用户名和密码不能为空！');
+            return;
+        }
+
+        try {
+            console.log('开始查询用户:', username);
+
+            // 查询用户
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .eq('password', password);
+
+            if (error) {
+                console.error('Supabase 查询错误:', error);
+                throw error;
+            }
+
+            console.log('查询结果:', users);
+
+            if (users && users.length > 0) {
+                const user = users[0];
+                console.log('登录成功:', user);
+
+                // 存储用户信息到 localStorage
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('currentUser', user.username);
+                localStorage.setItem('userRole', user.role);
+                localStorage.setItem('userId', user.id);
+
+                if (user.role === 'admin' || user.role === 'super-admin') {
+                    alert('👑 管理员登录成功！欢迎来到校园植被管理系统～');
+                } else {
+                    alert('🪴 登录成功！欢迎来到校园植被系统～');
+                }
+
+                setTimeout(() => {
+                    window.location.href = 'index.html?login=success';
+                }, 100);
+            } else {
+                alert('😥 账号或密码错误，请重试！');
+            }
+        } catch (error) {
+            console.error('登录错误:', error);
+            alert('😥 登录失败，请稍后重试！错误信息：' + error.message);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园植被身份证 | 探索校园植物世界</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Caveat:wght@400;600;700&display=swap"
+          rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 引入百度地图API -->
+    <script type="text/javascript"
+            src="https://api.map.baidu.com/api?v=3.0&ak=gKRg5w1OdVa4hkexo2mXWNT7A1OPAtsw"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#4CAF50',
+                        accent: '#8BC34A',
+                        neutral: '#F5F5F5',
+                        dark: '#212121',
+                        vintage: {
+                            paper: '#f8f6f0',
+                            brown: '#5a4634',
+                            lightBrown: '#7d6b56',
+                            gold: '#a68a64',
+                            lightGold: '#e8e0d0'
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                        playfair: ['Playfair Display', 'serif'],
+                        caveat: ['Caveat', 'cursive']
+                    },
+                },
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="index.css">
+
+</head>
+
+<body class="font-inter bg-gray-50 text-dark">
+<!-- 导航栏 -->
+<header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-transparent">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <button id="userAvatar" class="flex items-center focus:outline-none mr-2">
+                <div id="headerAvatar"
+                     class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center border border-white/30 overflow-hidden">
+                    <i class="fa fa-user text-white text-sm"></i>
+                </div>
+            </button>
+            <a href="#" class="flex items-center">
+                <span class="text-xl font-bold text-white text-shadow">校园植被身份证</span>
+            </a>
+        </div>
+
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+            <a href="#home" class="text-white hover:text-accent transition-colors">首页</a>
+            <a href="#plants" class="text-white hover:text-accent transition-colors">植物图鉴</a>
+            <a href="#map" class="text-white hover:text-accent transition-colors">植被地图</a>
+        </nav>
+
+        <!-- 搜索按钮 -->
+        <button id="searchBtn" class="hidden md:block text-white hover:text-accent transition-colors">
+            <i class="fa fa-search text-xl"></i>
+        </button>
+
+        <!-- 移动端菜单按钮 -->
+        <button id="menuBtn" class="md:hidden text-white text-2xl">
+            <i class="fa fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div id="mobileMenu"
+         class="md:hidden bg-white shadow-lg absolute w-full left-0 top-full transform -translate-y-full opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="container mx-auto px-4 py-3 flex flex-col space-y-4">
+            <a href="#home" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">首页</a>
+            <a href="#plants" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">植物图鉴</a>
+            <a href="#map" class="py-2 border-b border-gray-100 hover:text-primary transition-colors">植被地图</a>
+
+            <!-- 移动端搜索框 -->
+            <div class="relative">
+                <input type="text" placeholder="搜索植物名称、学名..."
+                       class="w-full py-2 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                       id="mobileSearchInput">
+                <i class="fa fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 搜索模态框 -->
+<div id="searchModal"
+     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-xl w-full max-w-2xl mx-4 p-6 transform scale-95 transition-transform duration-300">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">搜索植物</h3>
+            <button id="closeSearch" class="text-gray-500 hover:text-gray-700">
+                <i class="fa fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="relative">
+            <input type="text" placeholder="输入植物名称、学名、科属或特征..."
+                   class="w-full py-3 px-4 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 text-lg"
+                   id="modalSearchInput">
+            <i class="fa fa-search absolute right-3 top-4 text-gray-400"></i>
+        </div>
+        <div class="mt-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">热门搜索</h4>
+            <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">垂柳</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">海棠</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">月季</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">莲</span>
+                <span class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer transition-colors search-tag">水杉</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 英雄区域 -->
+<!--<section id="home" class="min-h-screen flex items-center bg-gradient-to-br from-green-400 to-green-600 pt-16">-->
+<section id="home" class="min-h-screen flex items-center pt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col md:flex-row items-center h-full">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-dark leading-tight mb-6">
+                    探索校园植物<br class="md:hidden">奇妙世界
+                </h1>
+                <p class="text-[clamp(1rem,2vw,1.25rem)] text-gray-600 max-w-2xl mb-8">
+                    通过校园植被身份证系统，了解每一株植物的故事，发现身边的自然之美
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#plants"
+                       class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-full transition-all shadow-lg hover:shadow-xl">
+                        浏览植物图鉴
+                    </a>
+                    <a href="#map"
+                       class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-medium py-3 px-8 rounded-full transition-all border border-white/40">
+                        查看植被地图
+                    </a>
+                </div>
+            </div>
+
+            <!-- 轮播图容器  -->
+            <div class="md:w-1/2 w-full" style="height: 60vh; max-height: 400px;">
+                <div class="carousel-container rounded-xl shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                </div>
+                <!-- 轮播指示器 -->
+                <div id="carousel-indicators" class="flex justify-center mt-4 gap-2">
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute left-1/2 transform -translate-x-1/2 text-dark animate-bounce hidden md:block"
+             style="bottom: -100px;">
+            <a href="#intro" class="flex flex-col items-center">
+                <span class="mb-2 text-sm">向下探索</span>
+                <i class="fa fa-chevron-down"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 简介部分 -->
+<section id="intro" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植被身份证项目</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto text-lg">
+                记录校园内的每一种植物，建立数字化的植物档案，让师生更深入地了解和保护校园生态环境</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-book text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">植物档案库</h3>
+                <p class="text-gray-600">建立完整的植物信息数据库，包含学名、俗名、科属、特征、生长环境等详细资料</p>
+            </div>
+
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-map-marker text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">位置定位</h3>
+                <p class="text-gray-600">标注每种植物在校园内的具体位置，方便师生查找和实地观察学习</p>
+            </div>
+
+            <div class="bg-neutral rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center">
+                <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-graduation-cap text-2xl text-primary"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-3">教育价值</h3>
+                <p class="text-gray-600">提供丰富的植物知识，成为生物、环境等学科的户外教学资源</p>
+            </div>
+        </div>
+
+        <div class="mt-16 bg-primary/5 rounded-2xl p-8 md:p-12">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">校园植物统计</h3>
+                    <p class="text-gray-600 mb-6">目前我们已记录校园内<span id="total-plants-count">0</span>种植物，涵盖乔木、灌木、草本、藤本和蕨类等多种类型。
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="total-plants-display">0</div>
+                            <div class="text-gray-600">植物种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1">5</div>
+                            <div class="text-gray-600">植物类别</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="trees-count">0</div>
+                            <div class="text-gray-600">乔木种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="shrubs-count">0</div>
+                            <div class="text-gray-600">灌木种类</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="herbs-count">0</div>
+                            <div class="text-gray-600">草本植物</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-1" id="vines-count">0</div>
+                            <div class="text-gray-600">藤本与蕨类</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="plantChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 植物图鉴部分 -->
+<section id="plants" class="py-20 bg-neutral">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植物图鉴</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">探索校园内丰富多样的植物种类，了解它们的特征和生长习性</p>
+        </div>
+
+        <!-- 搜索与分类栏 -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <!-- 左侧搜索框 -->
+            <div class="relative w-full sm:w-1/3">
+                <input type="text" placeholder="搜索植物名称、学名、科属..."
+                       class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                       id="plantSearchInput">
+                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            <!-- 右侧分类按钮 -->
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors filter-btn active"
+                        data-filter="all">全部植物
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="乔木">乔木
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="灌木">灌木
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="草本">草本
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="藤本">藤本
+                </button>
+                <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                        data-filter="蕨类">蕨类
+                </button>
+            </div>
+        </div>
+
+        <!-- 植物卡片网格 -->
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="plantsGrid">
+        </div>
+
+        <div id="noResults" class="hidden text-center py-16">
+            <i class="fa fa-search text-5xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">没有找到匹配的植物，请尝试其他关键词或分类</p>
+        </div>
+
+        <!-- 加载更多按钮 -->
+        <div class="text-center mt-12">
+            <button class="bg-white border border-primary text-primary hover:bg-primary hover:text-white font-medium py-3 px-8 rounded-full transition-all"
+                    id="loadMoreBtn">
+                加载更多植物 <i class="fa fa-angle-down ml-1"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- 植物详情模态框 -->
+<div id="specimen-detail" class="specimen-detail">
+    <div class="detail-container">
+        <div class="pin"></div>
+        <div class="detail-header">
+            <button class="close-btn" id="close-detail">×</button>
+            <h2 class="detail-title" id="detail-title">植物名称</h2>
+            <p class="detail-subtitle" id="detail-subtitle">拉丁学名</p>
+        </div>
+        <div class="detail-content">
+            <div class="detail-top">
+                <div class="detail-image-container" id="detail-image-container">
+                    <img src="" alt="" class="detail-image" id="detail-image">
+                </div>
+                <div class="detail-info">
+                    <div>
+                        <h3>植物信息</h3>
+                        <div class="info-item">
+                            <span class="info-label">科：</span>
+                            <span class="info-value" id="info-family">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">属：</span>
+                            <span class="info-value" id="info-genus">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">分布：</span>
+                            <span class="info-value" id="info-distribution">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">环境：</span>
+                            <span class="info-value" id="info-environment">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">采集时间：</span>
+                            <span class="info-value" id="info-collection-date">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">添加者：</span>
+                            <span class="info-value" id="info-created-by">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="description" id="info-description">
+                -
+            </div>
+
+            <div class="map-section">
+                <h3>分布地图</h3>
+                <div id="mini-map" class="map-container"></div>
+            </div>
+            <!-- 更多照片区域 -->
+            <div class="more-photos-section" id="more-photos-section" style="display: none;">
+                <h3>更多照片</h3>
+                <div class="more-photos-grid" id="more-photos-grid">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详情图片放大预览模态框 -->
+<div id="detail-image-preview" class="detail-image-preview">
+    <div class="detail-image-preview-content">
+        <img id="detail-image-preview-img" src="" alt="植物大图预览" class="detail-image-preview-img">
+        <button id="detail-image-preview-close" class="detail-image-preview-close">×</button>
+        <div class="detail-image-preview-info">
+            点击任意位置或按ESC键关闭预览
+        </div>
+    </div>
+</div>
+
+<!-- 图片全屏预览模态框 -->
+<div id="image-preview-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
+    <div class="relative max-w-6xl w-full h-full flex items-center justify-center">
+        <img id="fullscreen-image" src="" alt="植物大图预览"
+             class="max-w-full max-h-[90vh] object-contain opacity-0 transition-opacity duration-300">
+        <button id="close-image-preview"
+                class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+            <i class="fa fa-times text-xl"></i>
+        </button>
+        <div class="absolute bottom-4 left-0 right-0 text-center text-white text-sm">
+            点击X或按ESC键关闭
+        </div>
+    </div>
+</div>
+
+<!-- 校园植被地图（百度地图版本） -->
+<section id="map" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-4">校园植被地图</h2>
+            <p class="text-gray-600 max-w-3xl mx-auto">探索校园内各类植物的分布情况，规划你的植物观察路线</p>
+        </div>
+
+        <div class="bg-neutral rounded-xl overflow-hidden shadow-sm">
+            <!-- 百度地图容器 -->
+            <div class="relative">
+                <div class="map-legend-container">
+                    <div class="map-legend">
+                        <h3 class="font-semibold mb-3">植物类型</h3>
+                        <div class="grid grid-cols-2 gap-2" id="map-legend">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-primary mr-2"></div>
+                                <span class="text-sm">乔木</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-secondary mr-2"></div>
+                                <span class="text-sm">灌木</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-accent mr-2"></div>
+                                <span class="text-sm">草本</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>
+                                <span class="text-sm">藤本</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full bg-purple-500 mr-2"></div>
+                                <span class="text-sm">蕨类</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="baidu-map-container">
+                </div>
+            </div>
+
+            <!-- 地图下方内容区域 -->
+            <div class="p-6 relative z-10 bg-neutral">
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button class="px-4 py-2 bg-primary text-white rounded-full text-sm flex items-center transition-colors filter-map-btn active"
+                            data-filter="all">
+                        <i class="fa fa-crosshairs mr-2"></i> 显示所有植物
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="乔木">
+                        <i class="fa fa-tree mr-2 text-primary"></i> 只看乔木
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="灌木">
+                        <i class="fa fa-pagelines mr-2 text-secondary"></i> 只看灌木
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="草本">
+                        <i class="fa fa-leaf mr-2 text-accent"></i> 只看草本
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="藤本">
+                        <i class="fa fa-vine mr-2 text-yellow-500"></i> 只看藤本
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm flex items-center transition-colors filter-map-btn"
+                            data-filter="蕨类">
+                        <i class="fa fa-pagelines mr-2 text-purple-500"></i> 只看蕨类
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">植物分布最多的区域</h3>
+                        <ol class="space-y-2 text-gray-600" id="top-locations">
+                            <!-- 植物分布区域将通过JavaScript动态生成 -->
+                        </ol>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">植物观察推荐路线</h3>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa fa-map-signs text-primary mt-1 mr-2"></i>
+                                <span>东门 → 操场 → 校园主干路 → 图书馆 → 梅花食堂 → 西湖周边 → 文思园</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h3 class="font-semibold mb-2">当前季节推荐植物</h3>
+                        <div class="flex flex-wrap gap-2" id="seasonal-plants">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <!-- 左侧部分 -->
+            <div class="text-center md:text-left">
+                <div class="flex items-center space-x-2 mb-6 justify-center md:justify-start">
+                    <i class="fa fa-leaf text-2xl text-accent"></i>
+                    <span class="text-xl font-bold">校园植被身份证</span>
+                </div>
+                <p class="text-gray-400 mb-6">记录校园植物，传播自然知识，共建绿色校园</p>
+            </div>
+
+            <!-- 中间部分 -->
+            <div class="text-center">
+                <h3 class="text-lg font-semibold mb-6">快速链接</h3>
+                <ul class="space-y-3">
+                    <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+                    <li><a href="#plants" class="text-gray-400 hover:text-white transition-colors">植物图鉴</a></li>
+                    <li><a href="#map" class="text-gray-400 hover:text-white transition-colors">植被地图</a></li>
+                </ul>
+                <div class="mt-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors website-qrcode inline-flex items-center">
+                        <span>访问我们</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 右侧部分 -->
+            <div class="text-center md:text-left md:ml-auto md:mr-8">
+                <h3 class="text-lg font-semibold mb-6">联系我们</h3>
+                <ul class="space-y-3">
+                    <!-- 可点击的QQ图标 -->
+                    <li class="flex items-start justify-center md:justify-start">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors qq-qrcode flex items-start">
+                            <i class="fa fa-qq text-accent mt-1 mr-3"></i>
+                            <span class="text-gray-400">2785300881</span>
+                        </a>
+                    </li>
+                    <!-- 可点击的微信图标 -->
+                    <li class="flex items-start justify-center md:justify-start">
+                        <a href="#"
+                           class="text-gray-400 hover:text-white transition-colors wechat-qrcode flex items-start">
+                            <i class="fa fa-weixin text-accent mt-1 mr-3"></i>
+                            <span class="text-gray-400">xxxxxxxxxxx</span>
+                        </a>
+                    </li>
+                    <li class="flex items-start justify-center md:justify-start">
+                        <i class="fa fa-envelope text-accent mt-1 mr-3"></i>
+                        <span class="text-gray-400">2785300881@qq.com</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm mb-4 md:mb-0">© 2025 范紫莫保留所有权利.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- 二维码预览模态框 -->
+<div id="qrcode-preview" class="qrcode-preview">
+    <div class="qrcode-preview-content">
+        <button id="qrcode-preview-close" class="qrcode-preview-close">×</button>
+        <h3 class="qrcode-preview-title" id="qrcode-title">微信二维码</h3>
+        <p class="qrcode-preview-desc" id="qrcode-desc">扫描二维码关注我们的微信</p>
+        <img id="qrcode-preview-img" src="" alt="二维码" class="qrcode-preview-img">
+        <div class="qrcode-preview-info">
+            点击任意位置或按ESC键关闭预览
+        </div>
+    </div>
+</div>
+
+<!-- 回到顶部按钮 -->
+<button id="backToTop"
+        class="fixed bottom-6 right-6 bg-primary hover:bg-primary/90 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all opacity-0 invisible">
+    <i class="fa fa-chevron-up"></i>
+</button>
+
+<!-- 植物评论抽屉 -->
+<div id="plantCommentOverlay" class="plant-comment-overlay">
+    <div class="plant-comment-drawer">
+        <div class="plant-comment-header">
+            <h3 id="plant-comment-title">评论</h3>
+            <button class="close-plant-comment" id="closePlantCommentBtn">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="plant-comment-content" id="plant-comments-container">
+        </div>
+        <div class="plant-comment-input-area">
+            <textarea
+                    class="plant-comment-input"
+                    id="plant-comment-input"
+                    placeholder="写下你的评论..."
+                    rows="3"></textarea>
+            <button class="submit-plant-comment" id="submitPlantCommentBtn">
+                发表评论
+            </button>
+        </div>
+    </div>
+</div>
+<!-- 成功消息弹窗 -->
+<div id="successMessage" class="success-message">
+    <div class="success-message-content">
+        <i class="fa fa-check-circle success-message-icon"></i>
+        <span id="successText" class="success-message-text"></span>
+    </div>
+</div>
+
+<!-- 错误消息弹窗 -->
+<div id="errorMessage" class="error-message">
+    <div class="error-message-content">
+        <i class="fa fa-exclamation-circle error-message-icon"></i>
+        <span id="errorText" class="error-message-text"></span>
+    </div>
+</div>
+<script src="index.js"></script>
+</body>
+</html>

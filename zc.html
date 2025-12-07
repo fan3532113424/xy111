@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 校园植被</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', '幼圆', '微软雅黑', sans-serif;
+        }
+
+        body {
+            background: center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡通装饰元素（和登录页风格统一） */
+        .float-decor {
+            position: absolute;
+            z-index: 1;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg) scale(1.1);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.6;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0.6;
+                transform: scale(0.8);
+            }
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 248, 220, 0.3), rgba(255, 228, 196, 0.4));
+            z-index: -1;
+        }
+
+        /* 注册容器优化（透明度60%，更清晰） */
+        .register-container {
+            background: rgba(255, 250, 205, 0.6); /* 透明度60% */
+            padding: 45px 40px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 450px;
+            border: 6px solid #FFD700; /* 金色边框 */
+            box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            position: relative;
+            z-index: 2;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 30px #FFD700, 0 0 50px rgba(255, 165, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 165, 0, 0.6);
+            }
+        }
+
+        /* 标题优化（卡通风格+动画） */
+        .register-title {
+            font-size: 32px;
+            color: #8B4513; /* 棕色调文字 */
+            text-align: center;
+            margin-bottom: 35px;
+            text-shadow: 3px 3px 6px #FFD700;
+            animation: bounce 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* 标签优化（暖色调） */
+        .form-label {
+            display: block;
+            color: #8B4513;
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #FFE4B5;
+        }
+
+        /* 输入框优化（透明度60%，提升可读性） */
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 4px solid #A0522D; /* 棕色边框 */
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.6); /* 透明度60% */
+            color: #8B4513;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #A0522D;
+            opacity: 0.7;
+        }
+
+        .form-input:focus {
+            outline: none;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(212, 175, 55, 0.5);
+            border-color: #FFD700;
+        }
+
+        /* 错误提示样式 */
+        .error-message {
+            color: #ff3333;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        /* 注册按钮优化（渐变+卡通风格） */
+        .register-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            color: #8B4513;
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 15px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #fff;
+            box-shadow: 0 6px 12px rgba(160, 82, 45, 0.2);
+        }
+
+        .register-btn:hover {
+            background: linear-gradient(135deg, #FFC107, #FFD700);
+            transform: translateY(-5px) rotate(1deg) scale(1.02);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.7);
+            border-color: #A0522D;
+        }
+
+        .register-btn:active {
+            transform: translateY(-2px) rotate(0deg) scale(0.98);
+        }
+
+        /* 登录链接优化 */
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+
+        .login-link a {
+            color: #8B4513;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px #FFE4B5;
+        }
+
+        .login-link a:hover {
+            color: #A0522D;
+            text-decoration: underline;
+            transform: scale(1.05);
+            display: inline-block;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 375px) {
+            .register-container {
+                padding: 35px 25px;
+                border-width: 4px;
+            }
+
+            .register-title {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+            .form-input {
+                padding: 12px;
+                font-size: 16px;
+                border-width: 3px;
+            }
+
+            .register-btn {
+                padding: 12px;
+                font-size: 18px;
+                border-width: 3px;
+            }
+
+            .login-link {
+                font-size: 16px;
+            }
+
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2 class="register-title">🌱 注册校园植被 🌱</h2>
+    <form id="registerForm">
+        <div class="form-group">
+            <label class="form-label" for="username">用户名</label>
+            <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+            <div class="error-message" id="usernameError">用户名不能为空</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="password">密码</label>
+            <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+            <div class="error-message" id="passwordError">密码至少需要6位字符</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="confirmPassword">确认密码</label>
+            <input type="password" id="confirmPassword" class="form-input" placeholder="请再次输入密码" required>
+            <div class="error-message" id="confirmPasswordError">两次输入的密码不一致</div>
+        </div>
+        <button type="submit" class="register-btn">🌿 立即注册 🌿</button>
+        <div class="login-link">
+            已有账号？<a href="login.html">🐾 立即登录 🐾</a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Supabase配置 - 使用您提供的正确配置
+    const SUPABASE_URL = 'https://sgwbztuizxowiacpwzmy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNnd2J6dHVpenhvd2lhY3B3em15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzIyMDYsImV4cCI6MjA3OTkwODIwNn0.js6fUBJ9FGRMkVgp80Q-8D6hX-xXbr29rWKyJgOA9b4';
+
+    // 创建 Supabase 客户端
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    console.log('Supabase 初始化完成:', supabase);
+
+    const registerForm = document.getElementById('registerForm');
+
+    // 表单验证函数
+    function validateForm() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // 重置错误信息
+        document.querySelectorAll('.error-message').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        let isValid = true;
+
+        if (!username) {
+            document.getElementById('usernameError').textContent = '用户名不能为空';
+            document.getElementById('usernameError').style.display = 'block';
+            isValid = false;
+        } else if (username.length < 3) {
+            document.getElementById('usernameError').textContent = '用户名至少需要3个字符';
+            document.getElementById('usernameError').style.display = 'block';
+            isValid = false;
+        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            document.getElementById('usernameError').textContent = '用户名只能包含字母、数字和下划线';
+            document.getElementById('usernameError').style.display = 'block';
+            isValid = false;
+        }
+
+        if (password.length < 6) {
+            document.getElementById('passwordError').textContent = '密码至少需要6位字符';
+            document.getElementById('passwordError').style.display = 'block';
+            isValid = false;
+        }
+
+        if (password !== confirmPassword) {
+            document.getElementById('confirmPasswordError').textContent = '两次输入的密码不一致';
+            document.getElementById('confirmPasswordError').style.display = 'block';
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // 实时验证
+    document.getElementById('username').addEventListener('blur', function() {
+        const username = this.value.trim();
+        if (username && username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username)) {
+            document.getElementById('usernameError').style.display = 'none';
+        }
+    });
+
+    document.getElementById('password').addEventListener('input', function() {
+        if (this.value.length >= 6) {
+            document.getElementById('passwordError').style.display = 'none';
+        }
+    });
+
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        if (this.value === password) {
+            document.getElementById('confirmPasswordError').style.display = 'none';
+        }
+    });
+
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('注册表单提交');
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // 基本验证
+        if (!validateForm()) return;
+
+        // 显示加载状态
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '🌿 注册中... 🌿';
+        submitBtn.disabled = true;
+
+        try {
+            console.log('开始检查用户名是否存在:', username);
+
+            // 检查用户名是否存在
+            const { data: existingUsers, error: checkError } = await supabase
+                .from('users')
+                .select('username')
+                .eq('username', username);
+
+            if (checkError) {
+                console.error('检查用户名错误:', checkError);
+                throw checkError;
+            }
+
+            console.log('用户名检查结果:', existingUsers);
+
+            if (existingUsers && existingUsers.length > 0) {
+                document.getElementById('usernameError').textContent = '用户名已存在，请选择其他用户名';
+                document.getElementById('usernameError').style.display = 'block';
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+
+            console.log('开始创建新用户');
+            // 创建新用户
+            const { data: newUser, error: insertError } = await supabase
+                .from('users')
+                .insert([
+                    {
+                        username: username,
+                        password: password,
+                        role: 'user',
+                        full_name: `${username}`,
+                        email: ``,
+                        phone: '',
+                        department: '',
+                        student_id: '',
+                        bio: '',
+                        last_login: new Date().toISOString(),
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                ])
+                .select();
+
+            if (insertError) {
+                console.error('插入用户错误:', insertError);
+                throw insertError;
+            }
+
+            console.log('用户创建成功:', newUser);
+
+            // 显示成功消息
+            showSuccessMessage('🎉 注册成功！欢迎加入校园植被系统～');
+
+            // 2秒后跳转到登录页
+            setTimeout(() => {
+                window.location.href = 'login.html?register=success';
+            }, 2000);
+
+        } catch (error) {
+            console.error('注册错误:', error);
+
+            // 恢复按钮状态
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            // 显示错误消息
+            if (error.message.includes('duplicate key')) {
+                document.getElementById('usernameError').textContent = '用户名已存在，请选择其他用户名';
+                document.getElementById('usernameError').style.display = 'block';
+            } else {
+                alert('😥 注册失败，请稍后重试！错误信息：' + error.message);
+            }
+        }
+    });
+
+    // 显示成功消息函数
+    function showSuccessMessage(message) {
+        // 创建成功提示元素
+        const successDiv = document.createElement('div');
+        successDiv.className = 'success-message';
+        successDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(76, 175, 80, 0.9);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: bold;
+                animation: slideDown 0.3s ease;
+            ">
+                <i class="fa fa-check-circle" style="margin-right: 8px;"></i>
+                ${message}
+            </div>
+        `;
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from {
+                    top: -50px;
+                    opacity: 0;
+                }
+                to {
+                    top: 20px;
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        document.body.appendChild(successDiv);
+
+        // 3秒后自动移除
+        setTimeout(() => {
+            if (successDiv.parentNode) {
+                successDiv.parentNode.removeChild(successDiv);
+            }
+        }, 3000);
+    }
+
+    // 页面加载时检查URL参数
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('注册页面加载完成');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('redirect') === 'login') {
+            showSuccessMessage('请先注册账号！');
+        }
+
+        // 检查是否已登录，如果已登录则跳转到首页
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        // if (isLoggedIn === 'true') {
+        //     window.location.href = 'index.html';
+        // }
+    });
+
+    // 添加输入框回车键支持
+    document.querySelectorAll('.form-input').forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                registerForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    });
+
+</script>
+</body>
+</html>

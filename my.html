@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人信息 - 校园植被身份证</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 引入百度地图API -->
+    <script type="text/javascript"
+            src="https://api.map.baidu.com/api?v=3.0&ak=gKRg5w1OdVa4hkexo2mXWNT7A1OPAtsw"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="my.css">
+</head>
+<body>
+<!-- 导航栏 -->
+<header class="bg-white shadow-sm py-4">
+    <div class="profile-container px-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <a href="index.html" class="flex items-center">
+                <i class="fa fa-leaf text-2xl text-green-600 mr-2"></i>
+                <span class="text-xl font-bold text-gray-800">校园植被身份证</span>
+            </a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="index.html" class="text-gray-600 hover:text-green-600 transition-colors">
+                <i class="fa fa-home mr-1"></i> 返回主页
+            </a>
+            <button id="logoutBtn" class="text-gray-600 hover:text-red-600 transition-colors">
+                <i class="fa fa-sign-out mr-1"></i> 退出登录
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="profile-container px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-8">
+        <!-- 左侧边栏 -->
+        <div class="md:w-1/4">
+            <div class="card p-6 mb-6">
+                <div class="flex flex-col items-center mb-6">
+                    <div class="avatar-upload mb-4">
+                        <div id="avatarPreview" class="avatar-preview">
+                            <i class="fa fa-user avatar-placeholder"></i>
+                        </div>
+                        <div class="avatar-overlay">
+                            <i class="fa fa-camera text-white text-xl"></i>
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*" class="hidden">
+                    </div>
+                    <h2 id="userName" class="text-xl font-bold text-gray-800">加载中...</h2>
+                    <div id="userRole" class="role-badge role-user mt-2">加载中...</div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="tab-button active" data-tab="profile">
+                        <i class="fa fa-user mr-2"></i> 个人信息
+                    </div>
+                    <div class="tab-button" data-tab="security">
+                        <i class="fa fa-lock mr-2"></i> 账户安全
+                    </div>
+                    <!--                    &lt;!&ndash; 新增我的好友标签页 &ndash;&gt;-->
+                    <!--                    <div class="tab-button" data-tab="friends">-->
+                    <!--                        <i class="fa fa-users mr-2"></i> 我的好友-->
+                    <!--                    </div>-->
+                    <!--                    &lt;!&ndash; 新增消息通知标签页 &ndash;&gt;-->
+                    <!--                    <div class="tab-button" data-tab="messages">-->
+                    <!--                        <i class="fa fa-comments mr-2"></i> 消息通知-->
+                    <!--                        <span id="messagesBadge" class="tab-badge" style="display: none;">0</span>-->
+                    <!--                    </div>-->
+                    <!-- 新增我的作品标签页 -->
+                    <div class="tab-button" data-tab="works">
+                        <i class="fa fa-leaf mr-2"></i> 我的作品
+                    </div>
+                    <!-- 新增我的点赞/收藏标签页 -->
+                    <div class="tab-button" data-tab="favorites">
+                        <i class="fa fa-heart mr-2"></i> 我的点赞/收藏
+                    </div>
+                    <!-- 已删除用户管理标签页 -->
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h3 class="font-bold text-lg mb-4">最后登录</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-2xl font-bold" id="lastLogin">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧内容区域 -->
+        <div class="md:w-3/4">
+            <!-- 个人信息标签页 -->
+            <div id="profileTab" class="tab-content active">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">个人信息</h2>
+
+                    <form id="profileForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                                <input type="text" id="fullName" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                                <input type="text" id="username" class="form-input" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+                                <input type="email" id="email" class="form-input" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">手机号</label>
+                                <input type="tel" id="phone" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">部门/学院</label>
+                                <input type="text" id="department" class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">学号/工号</label>
+                                <input type="text" id="studentId" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">个人简介</label>
+                            <textarea id="bio" class="form-input" rows="4"></textarea>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancelProfile" class="btn-secondary">取消</button>
+                            <button type="submit" class="btn-primary" id="saveProfileBtn">
+                                <span id="saveProfileText">保存更改</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 账户安全标签页 -->
+            <div id="securityTab" class="tab-content">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">账户安全</h2>
+
+                    <form id="passwordForm">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">当前密码</label>
+                            <input type="password" id="currentPassword" class="form-input" required>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">新密码</label>
+                            <input type="password" id="newPassword" class="form-input" required>
+                            <p class="text-xs text-gray-500 mt-1">密码至少6位，包含字母或数字</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">确认新密码</label>
+                            <input type="password" id="confirmPassword" class="form-input" required>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancelPassword" class="btn-secondary">取消</button>
+                            <button type="submit" class="btn-primary" id="savePasswordBtn">
+                                <span id="savePasswordText">更改密码</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 新增我的好友标签页 -->
+            <div id="friendsTab" class="tab-content">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">我的好友</h2>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="filters">
+                            <div class="filter-btn active" data-filter="all">全部好友</div>
+                            <div class="filter-btn" data-filter="pinned">置顶好友</div>
+                        </div>
+                        <button id="addFriendBtn" class="btn-primary">
+                            <i class="fa fa-plus mr-2"></i> 添加好友
+                        </button>
+                    </div>
+
+                    <div id="friendsContent">
+                        <div class="empty-state">
+                            <i class="fa fa-users"></i>
+                            <h3 class="text-lg font-medium mb-2">暂无好友</h3>
+                            <p class="text-gray-500">添加好友，一起探索校园植被吧！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增消息通知标签页 -->
+            <div id="messagesTab" class="tab-content">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">消息通知</h2>
+
+                    <div class="subtab-buttons">
+                        <div class="subtab-button active" data-subtab="notifications">
+                            <i class="fa fa-bell mr-2"></i> 评论通知
+                        </div>
+                        <div class="subtab-button" data-subtab="chats">
+                            <i class="fa fa-comments mr-2"></i> 用户聊天
+                        </div>
+                    </div>
+
+                    <!-- 评论通知子标签页 -->
+                    <div id="notificationsSubtab" class="subtab-content active">
+                        <div class="notifications-list">
+                            <div class="empty-state">
+                                <i class="fa fa-bell"></i>
+                                <h3 class="text-lg font-medium mb-2">暂无通知</h3>
+                                <p class="text-gray-500">当有人评论您的植物时，您会收到通知</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 用户聊天子标签页 -->
+                    <div id="chatsSubtab" class="subtab-content">
+                        <div class="messages-container">
+                            <div class="conversations-list">
+                                <div class="empty-state">
+                                    <i class="fa fa-comments"></i>
+                                    <h3 class="text-lg font-medium mb-2">暂无对话</h3>
+                                    <p class="text-gray-500">选择用户开始聊天</p>
+                                </div>
+                            </div>
+                            <div class="chat-area">
+                                <div class="chat-header">
+                                    <h3 class="text-lg font-medium">选择对话</h3>
+                                </div>
+                                <div class="chat-messages">
+                                    <div class="empty-state">
+                                        <i class="fa fa-comments"></i>
+                                        <p class="text-gray-500">选择一个对话开始聊天</p>
+                                    </div>
+                                </div>
+                                <div class="chat-input-area" style="display: none;">
+                                    <div class="flex items-center gap-3">
+                                        <textarea class="chat-input" placeholder="输入消息..." rows="1"></textarea>
+                                        <button class="send-btn">
+                                            <i class="fa fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增我的作品标签页 -->
+            <div id="worksTab" class="tab-content">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">我的作品</h2>
+
+                    <!-- 搜索与分类栏 -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                        <!-- 左侧分类按钮 -->
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                            <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                                    data-filter="my-plants">我的植物
+                            </button>
+                            <button id="allPlantsFilter"
+                                    class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors filter-btn"
+                                    data-filter="all-plants" style="display: none;">所有植物
+                            </button>
+                        </div>
+
+                        <!-- 右侧搜索框和添加按钮 -->
+                        <div class="flex gap-4 w-full sm:w-1/2">
+                            <div class="relative w-full">
+                                <input type="text" placeholder="搜索植物名称、学名、科属..."
+                                       class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                       id="worksSearchInput">
+                                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <button id="addPlantBtn" class="btn-primary whitespace-nowrap">
+                                <i class="fa fa-plus mr-2"></i> 添加植物
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 植物卡片网格 -->
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-2 gap-6" id="worksGrid">
+                        <!-- 植物卡片将通过JavaScript动态生成 -->
+                    </div>
+
+                    <!-- 没有结果时显示 -->
+                    <div id="noWorksResults" class="hidden text-center py-16">
+                        <i class="fa fa-search text-5xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">没有找到匹配的植物，请尝试其他关键词</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== 修改：我的点赞/收藏标签页 - 使用植物卡片样式 ========== -->
+            <div id="favoritesTab" class="tab-content">
+                <div class="card p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">我的点赞与收藏</h2>
+
+                    <div class="filters mb-6">
+                        <div class="filter-btn active" data-filter="all">全部</div>
+                        <div class="filter-btn" data-filter="likes">点赞</div>
+                        <div class="filter-btn" data-filter="favorites">收藏</div>
+                    </div>
+
+                    <div id="favoritesContent">
+                        <div class="empty-state">
+                            <i class="fa fa-heart"></i>
+                            <h3 class="text-lg font-medium mb-2">暂无点赞或收藏</h3>
+                            <p class="text-gray-500">您还没有点赞或收藏任何植物，快去探索校园植被吧！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 新增：植物管理模态框 ========== -->
+<!-- 添加植物模态框 -->
+<div id="addPlantModal" class="plant-modal-overlay">
+    <div class="plant-modal-container">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">添加新植物</h3>
+                <button id="closeAddModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="addPlantForm">
+                <!-- 图片上传区域 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-image"></i> 植物图片
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1">
+                            <div class="dropzone" id="addImageDropzone">
+                                <div class="flex flex-col items-center py-4">
+                                    <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-3"></i>
+                                    <p class="text-gray-600 font-medium mb-1">点击或拖拽图片到此处上传</p>
+                                    <p class="text-sm text-gray-500">支持 JPG, PNG, WEBP 格式，建议尺寸 800x600 像素</p>
+                                </div>
+                                <input type="file" id="addImageUpload" class="hidden" multiple accept="image/*">
+                            </div>
+                            <div id="addUploadStatus" class="upload-status">
+                                <span id="addUploadCount">0</span> 张图片已选择
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div id="addImagePreview" class="upload-preview-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基本信息区域 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-info-circle"></i> 基本信息
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label for="addPlantName" class="plant-label">植物名称 <span class="required-star">*</span></label>
+                            <input type="text" id="addPlantName" class="plant-input" placeholder="请输入植物中文名称"
+                                   required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantScientific" class="plant-label">拉丁学名</label>
+                            <input type="text" id="addPlantScientific" class="plant-input"
+                                   placeholder="请输入植物拉丁学名">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantCategory" class="plant-label">植物类别 <span
+                                    class="required-star">*</span></label>
+                            <select id="addPlantCategory" class="plant-input" required>
+                                <option value="">请选择植物类别</option>
+                                <option value="乔木">乔木</option>
+                                <option value="灌木">灌木</option>
+                                <option value="草本">草本</option>
+                                <option value="藤本">藤本</option>
+                                <option value="蕨类">蕨类</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantFamily" class="plant-label">科</label>
+                            <input type="text" id="addPlantFamily" class="plant-input" placeholder="请输入植物所属科">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantGenus" class="plant-label">属</label>
+                            <input type="text" id="addPlantGenus" class="plant-input" placeholder="请输入植物所属属">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantEnvironment" class="plant-label">生长环境</label>
+                            <input type="text" id="addPlantEnvironment" class="plant-input"
+                                   placeholder="如：温带、亚热带地区">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantLocation" class="plant-label">校园分布区域</label>
+                            <input type="text" id="addPlantLocation" class="plant-input"
+                                   placeholder="如：主干道两侧、图书馆前">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="addPlantCollectionDate" class="plant-label">采集时间</label>
+                            <input type="date" id="addPlantCollectionDate" class="plant-input">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="addPlantDescription" class="plant-label">植物简介</label>
+                        <textarea id="addPlantDescription" class="plant-input" rows="3"
+                                  placeholder="简要描述植物的基本信息、历史背景等"></textarea>
+                    </div>
+                </div>
+
+                <!-- 地图位置选择器 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-map-marker"></i> 校园位置
+                    </div>
+                    <div class="mb-4">
+                        <label class="plant-label">在地图上标记位置</label>
+                        <div class="mb-4" id="addLocationSelector">
+                            <div id="add-baidu-map-selector-container" class="baidu-map-selector-container"></div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="text" id="addPlantLocationMap" class="plant-input"
+                                   placeholder="位置描述，如：主干道两侧">
+                            <button type="button" id="addResetLocation"
+                                    class="ml-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors whitespace-nowrap">
+                                重置位置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" id="cancelAddForm"
+                            class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="fa fa-save mr-2"></i> 保存植物信息
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑植物模态框 -->
+<div id="editPlantModal" class="plant-modal-overlay">
+    <div class="plant-modal-container">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">编辑植物信息</h3>
+                <button id="closeEditModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="editPlantForm">
+                <!-- 图片上传区域 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-image"></i> 植物图片
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1">
+                            <div class="dropzone" id="editImageDropzone">
+                                <div class="flex flex-col items-center py-4">
+                                    <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-3"></i>
+                                    <p class="text-gray-600 font-medium mb-1">点击或拖拽图片到此处上传</p>
+                                    <p class="text-sm text-gray-500">支持 JPG, PNG, WEBP 格式，建议尺寸 800x600 像素</p>
+                                </div>
+                                <input type="file" id="editImageUpload" class="hidden" multiple accept="image/*">
+                            </div>
+                            <div id="editUploadStatus" class="upload-status">
+                                <span id="editUploadCount">0</span> 张图片已选择
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <div id="editImagePreview" class="upload-preview-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基本信息区域 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-info-circle"></i> 基本信息
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label for="editPlantName" class="plant-label">植物名称 <span class="required-star">*</span></label>
+                            <input type="text" id="editPlantName" class="plant-input" placeholder="请输入植物中文名称"
+                                   required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantScientific" class="plant-label">拉丁学名</label>
+                            <input type="text" id="editPlantScientific" class="plant-input"
+                                   placeholder="请输入植物拉丁学名">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantCategory" class="plant-label">植物类别 <span
+                                    class="required-star">*</span></label>
+                            <select id="editPlantCategory" class="plant-input" required>
+                                <option value="">请选择植物类别</option>
+                                <option value="乔木">乔木</option>
+                                <option value="灌木">灌木</option>
+                                <option value="草本">草本</option>
+                                <option value="藤本">藤本</option>
+                                <option value="蕨类">蕨类</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantFamily" class="plant-label">科</label>
+                            <input type="text" id="editPlantFamily" class="plant-input" placeholder="请输入植物所属科">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantGenus" class="plant-label">属</label>
+                            <input type="text" id="editPlantGenus" class="plant-input" placeholder="请输入植物所属属">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantEnvironment" class="plant-label">生长环境</label>
+                            <input type="text" id="editPlantEnvironment" class="plant-input"
+                                   placeholder="如：温带、亚热带地区">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantLocation" class="plant-label">校园分布区域</label>
+                            <input type="text" id="editPlantLocation" class="plant-input"
+                                   placeholder="如：主干道两侧、图书馆前">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="editPlantCollectionDate" class="plant-label">采集时间</label>
+                            <input type="date" id="editPlantCollectionDate" class="plant-input">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="editPlantDescription" class="plant-label">植物简介</label>
+                        <textarea id="editPlantDescription" class="plant-input" rows="3"
+                                  placeholder="简要描述植物的基本信息、历史背景等"></textarea>
+                    </div>
+                </div>
+
+                <!-- 地图位置选择器 -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fa fa-map-marker"></i> 校园位置
+                    </div>
+                    <div class="mb-4">
+                        <label class="plant-label">在地图上标记位置</label>
+                        <div class="mb-4" id="editLocationSelector">
+                            <div id="edit-baidu-map-selector-container" class="baidu-map-selector-container"></div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="text" id="editPlantLocationMap" class="plant-input"
+                                   placeholder="位置描述，如：主干道两侧">
+                            <button type="button" id="editResetLocation"
+                                    class="ml-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors whitespace-nowrap">
+                                重置位置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" id="cancelEditForm"
+                            class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        取消
+                    </button>
+                    <button type="submit"
+                            class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center">
+                        <i class="fa fa-save mr-2"></i> 更新植物信息
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 成功提示消息 -->
+<div id="successMessage" class="success-message">
+    <i class="fa fa-check-circle mr-2"></i>
+    <span id="successText">操作成功！</span>
+</div>
+
+<!-- 添加好友模态框 -->
+<div id="addFriendModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">添加好友</h3>
+            <button id="closeFriendModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">搜索用户</label>
+                <input type="text" id="searchUserInput" class="form-input" placeholder="输入用户名或姓名">
+            </div>
+            <div id="searchResults" class="max-h-60 overflow-y-auto">
+                <!-- 搜索结果将在这里显示 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 植物详情模态框 -->
+<div id="specimen-detail" class="specimen-detail">
+    <div class="detail-container">
+        <div class="detail-header">
+            <button class="close-btn" id="close-detail">×</button>
+            <h2 class="detail-title" id="detail-title">植物名称</h2>
+            <p class="detail-subtitle" id="detail-subtitle">拉丁学名</p>
+        </div>
+        <div class="detail-content">
+            <div class="detail-top">
+                <div class="detail-image-container" id="detail-image-container">
+                    <img src="" alt="" class="detail-image" id="detail-image">
+                </div>
+                <div class="detail-info">
+                    <div>
+                        <h3>植物信息</h3>
+                        <div class="info-item">
+                            <span class="info-label">科：</span>
+                            <span class="info-value" id="info-family">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">属：</span>
+                            <span class="info-value" id="info-genus">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">分布：</span>
+                            <span class="info-value" id="info-distribution">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">环境：</span>
+                            <span class="info-value" id="info-environment">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">采集时间：</span>
+                            <span class="info-value" id="info-collection-date">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">添加者：</span>
+                            <span class="info-value" id="info-created-by">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="description" id="info-description">
+                -
+            </div>
+
+            <div class="map-section">
+                <h3>分布地图</h3>
+                <div id="mini-map" class="map-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详情图片放大预览模态框 -->
+<div id="detail-image-preview" class="detail-image-preview">
+    <div class="detail-image-preview-content">
+        <img id="detail-image-preview-img" src="" alt="植物大图预览" class="detail-image-preview-img">
+        <button id="detail-image-preview-close" class="detail-image-preview-close">×</button>
+    </div>
+</div>
+<script src="my.js"></script>
+</body>
+</html>
