@@ -449,13 +449,7 @@ async function openPlantCommentDrawer(plantId) {
         closeBtn.setAttribute('data-plant-id', plantId);
         closeBtn.onclick = () => closePlantCommentDrawer(plantId);
     }
-
-    // 添加提交按钮事件
-    const submitBtn = drawer.querySelector('.submit-plant-comment');
-    if (submitBtn) {
-        submitBtn.onclick = () => submitPlantComment(plantId);
-    }
-
+    
     // 添加输入框回车事件
     const commentInput = drawer.querySelector('.plant-comment-input');
     if (commentInput) {
@@ -617,6 +611,7 @@ async function loadPlantComments(plantId) {
 
         // 更新评论数量显示
         updateCommentCountDisplay(plantId, comments?.length || 0);
+        PlantState.updatePlantInteraction(plantId, 'comment', comments?.length || 0);
 
         // 渲染评论
         renderPlantComments(plantId, comments);
@@ -867,9 +862,6 @@ async function submitPlantComment(plantId) {
 
         // 重新加载评论
         await loadPlantComments(plantId);
-
-        // 更新评论计数
-        updatePlantInteractionCounts();
 
         const plant = worksData.find(p => p.id == plantId);
         if (plant && plant.created_by !== currentUser) {
@@ -1599,6 +1591,38 @@ async function fetchPlantsFromSupabase() {
         const formattedData = {};
         plants.forEach(plant => {
             const images = processPlantImages(plant);
+            // 修改这里的坐标处理逻辑
+            let mapPosition = {lng: 119.053194, lat: 33.558272}; // 默认坐标
+
+            if (plant.map_position && typeof plant.map_position === 'string') {
+                try {
+                    const parsedPos = JSON.parse(plant.map_position);
+                    if (parsedPos && typeof parsedPos.lng === 'number' && typeof parsedPos.lat === 'number') {
+                        mapPosition = {
+                            lng: parsedPos.lng,
+                            lat: parsedPos.lat
+                        };
+                    }
+                } catch (e) {
+                    console.warn(`植物 ${plant.id} 的坐标解析失败:`, e);
+                }
+            } else if (plant.map_position && typeof plant.map_position === 'object') {
+                if (plant.map_position.lng && plant.map_position.lat) {
+                    mapPosition = {
+                        lng: parseFloat(plant.map_position.lng),
+                        lat: parseFloat(plant.map_position.lat)
+                    };
+                }
+            }
+
+            // 如果有经纬度字段，优先使用
+            if (plant.longitude && plant.latitude) {
+                mapPosition = {
+                    lng: parseFloat(plant.longitude),
+                    lat: parseFloat(plant.latitude)
+                };
+            }
+
             formattedData[plant.id] = {
                 id: plant.id,
                 name: plant.name,
@@ -1612,10 +1636,7 @@ async function fetchPlantsFromSupabase() {
                 collectionDate: plant.collection_date,
                 category: plant.category,
                 location: plant.location,
-                mapPosition: plant.map_position ? {
-                    lng: plant.map_position.lng,
-                    lat: plant.map_position.lat
-                } : {lng: 119.053194, lat: 33.558272},
+                mapPosition: mapPosition,
                 createdBy: plant.created_by,
                 created_at: plant.created_at
             };
