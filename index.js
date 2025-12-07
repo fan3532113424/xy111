@@ -878,6 +878,7 @@ async function submitPlantComment(plantId) {
         submitBtn.innerHTML = '发表评论';
     }
 }
+
 // 删除植物评论
 async function deletePlantCommentById(commentId, plantId) {
     try {
@@ -1405,13 +1406,9 @@ function processPlantImages(plant) {
                 images = [plant.images];
             }
         }
-    }
-
-    else if (Array.isArray(plant.images)) {
+    } else if (Array.isArray(plant.images)) {
         images = plant.images;
-    }
-
-    else if (plant.image_url && typeof plant.image_url === 'string') {
+    } else if (plant.image_url && typeof plant.image_url === 'string') {
         try {
             const parsedImageUrl = JSON.parse(plant.image_url);
             if (Array.isArray(parsedImageUrl)) {
@@ -1716,7 +1713,113 @@ async function initApp() {
         initBaiduMap();
     }, 1000);
 
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMorePlants);
+    }
     console.log('应用初始化完成');
+}
+
+// 新增：加载更多植物函数
+async function loadMorePlants() {
+    try {
+        // 获取所有植物ID
+        const allPlantIds = Object.keys(PlantState.plants).map(id => parseInt(id)).sort((a, b) => a - b);
+
+        // 计算当前显示的数量
+        const currentCount = document.querySelectorAll('.plant-card').length;
+
+        // 如果没有更多植物可显示
+        if (currentCount >= allPlantIds.length) {
+            document.getElementById('loadMoreBtn').style.display = 'none';
+            return;
+        }
+
+        // 计算需要加载的下一个批次
+        const nextBatchCount = Math.min(6, allPlantIds.length - currentCount);
+        const nextPlantIds = allPlantIds.slice(currentCount, currentCount + nextBatchCount);
+
+        console.log(`加载更多: 当前 ${currentCount} 个，加载 ${nextBatchCount} 个新植物`);
+
+        // 加载并显示新植物
+        const plantsGrid = document.getElementById('plantsGrid');
+
+        nextPlantIds.forEach(id => {
+            const plant = PlantState.plants[id];
+            if (!plant) return;
+
+            const interaction = PlantState.getPlantInteraction(id.toString());
+
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl overflow-hidden shadow-sm card-hover group plant-card';
+            card.setAttribute('data-type', plant.category);
+            card.setAttribute('data-name', plant.name);
+            card.setAttribute('data-family', plant.family);
+            card.setAttribute('data-scientific', plant.scientific);
+
+            card.innerHTML = `
+                ${generatePlantCardImage(plant)}
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="text-lg font-semibold plant-name">${plant.name}</h3>
+                            <span class="text-xs text-gray-500">${plant.scientific}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2 plant-description">${plant.description}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> ${plant.distribution}</span>
+                        <span class="text-xs text-gray-500"><i class="fa fa-user mr-1"></i> ${plant.createdBy || '未知'}</span>
+                        <button class="view-detail-btn text-primary hover:text-primary/80 text-sm font-medium" data-id="${id}">查看详情</button>
+                    </div>
+                </div>
+                <div class="plant-actions">
+                    <div class="plant-action-btn like" data-plant-id="${id}">
+                        <i class="fa fa-heart"></i>
+                        <span class="like-count">${interaction.likes}</span>
+                    </div>
+                    <div class="plant-action-btn favorite" data-plant-id="${id}">
+                        <i class="fa fa-bookmark"></i>
+                        <span class="favorite-count">${interaction.favorites}</span>
+                    </div>
+                    <div class="plant-action-btn comment" data-plant-id="${id}">
+                        <i class="fa fa-comment"></i>
+                        <span class="comment-count">${interaction.comments}</span>
+                    </div>
+                </div>
+            `;
+
+            plantsGrid.appendChild(card);
+        });
+
+        // 重新绑定事件
+        document.querySelectorAll('.view-detail-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const plantId = this.getAttribute('data-id');
+                showPlantDetails(plantId);
+            });
+        });
+
+        initInteractionButtons();
+
+        // 更新显示数量限制
+        plantsDisplayLimit += nextBatchCount;
+
+        // 如果没有更多植物可显示，隐藏按钮
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (plantsDisplayLimit >= Object.keys(PlantState.plants).length) {
+            loadMoreBtn.style.display = 'none';
+        }
+
+        // 重新应用筛选
+        filterPlants(currentSearch, currentFilter);
+
+    } catch (error) {
+        console.error('加载更多植物失败:', error);
+        alert('加载更多植物失败，请重试');
+    }
 }
 
 function initBaiduMap() {
@@ -2052,6 +2155,7 @@ function updateMiniMap(plant) {
         }
     }, 100);
 }
+
 // 用户头像点击事件
 document.getElementById('userAvatar').addEventListener('click', function () {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -2318,7 +2422,7 @@ function closeDetailImagePreview() {
 function setupQrcodePreview() {
     document.querySelector('.website-qrcode')?.addEventListener('click', function (e) {
         e.preventDefault();
-        openQrcodePreview('扫描二维码访问我们网站', 'img/website-qrcode.jpg');
+        openQrcodePreview('扫描二维码访问我们网站', "",'img/访问.png');
     });
     document.querySelector('.wechat-qrcode')?.addEventListener('click', function (e) {
         e.preventDefault();
@@ -2881,7 +2985,7 @@ function updateSeasonalPlants() {
         tag.textContent = plant.name;
         tag.setAttribute('data-id', plantId);
 
-        tag.addEventListener('click', function(e) {
+        tag.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
