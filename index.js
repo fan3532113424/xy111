@@ -698,21 +698,22 @@ function renderPlantComments(plantId, comments) {
             `<img src="${comment.users.avatar}" alt="${comment.users.full_name}" class="w-8 h-8 rounded-full">` :
             `<i class="fa fa-user text-gray-400"></i>`
         }
-        </div>
-            <div class="flex-1">
-                <div class="flex justify-between items-start">       
-                    <div>
-                        <div class="font-medium text-sm">${comment.users?.full_name || comment.users?.username || '匿名用户'}</div>                                <div class="text-xs text-gray-500">${timeAgo}</div>
                     </div>
-                        ${isOwn ? `
-                            <button class="delete-comment-btn text-xs" data-comment-id="${comment.id}">
-                            <i class="fa fa-trash"></i> 删除
-                            </button>
-                        ` : ''}
-                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-medium text-sm">${comment.users?.full_name || comment.users?.username || '匿名用户'}</div>
+                                <div class="text-xs text-gray-500">${timeAgo}</div>
+                            </div>
+                            ${isOwn ? `
+                                <button class="delete-comment-btn text-xs" data-comment-id="${comment.id}">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            ` : ''}
+                        </div>
                         <div class="mt-2 text-sm text-gray-700">${escapeHtml(comment.content)}</div>
                     </div>
-                </div>           
+                </div>
             </div>
         `;
     });
@@ -1659,7 +1660,7 @@ function showPlantDetails(plantId) {
     document.getElementById('info-distribution').textContent = plant.distribution;
     document.getElementById('info-environment').textContent = plant.environment;
     document.getElementById('info-collection-date').textContent = plant.collectionDate;
-    document.getElementById('info-created-by').textContent = plant.created_by_full_name || plant.users?.full_name || plant.created_by || '未知';
+    document.getElementById('info-created-by').textContent = plant.createdBy || '未知';
 
     const detailImage = document.getElementById('detail-image');
     detailImage.src = mainImage;
