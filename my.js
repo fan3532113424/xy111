@@ -201,6 +201,7 @@ let currentCommentPlantId = null;
 // 用户列表（用于 @ 提及）
 let allUsers = [];
 let currentUser = '';
+let full_name ='';
 
 // 当前编辑的植物ID
 let editingPlantId = null;
@@ -220,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 从localStorage获取当前用户信息
     const currentUser = localStorage.getItem('currentUser');
     const userRole = localStorage.getItem('userRole');
+    const full_name = localStorage.getItem('full_name');
 
     if (!currentUser) {
         alert('请先登录！');
@@ -230,13 +232,13 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('当前用户:', currentUser, '角色:', userRole);
 
     // 立即显示基本信息
-    document.getElementById('userName').textContent = currentUser;
+    document.getElementById('userName').textContent = full_name;
     document.getElementById('username').value = currentUser;
-    document.getElementById('fullName').value = currentUser;
+    document.getElementById('fullName').value = full_name;
     document.getElementById('email').value = currentUser + '';
 
     // 加载用户数据
-    loadUserData(currentUser, userRole);
+    loadUserData(currentUser, userRole, full_name);
 
     // 设置标签页切换
     setupTabs();
@@ -797,7 +799,8 @@ async function handleAddPlantSubmit(e) {
             location: document.getElementById('addPlantLocation').value.trim(),
             description: document.getElementById('addPlantDescription').value.trim(),
             collection_date: document.getElementById('addPlantCollectionDate').value,
-            created_by: localStorage.getItem('currentUser')
+            created_by: localStorage.getItem('currentUser'),
+            created_by_full_name: localStorage.getItem('full_name')
         };
 
         // 如果有经纬度数据
@@ -1289,44 +1292,12 @@ async function fetchFriendsData(username) {
 // 模拟好友数据（实际使用时请删除）
 function getMockFriendsData() {
     return [
-        {
-            id: 1,
-            friend_id: 1001,
-            pinned: true,
-            created_at: new Date().toISOString(),
-            users: {
-                username: 'user1',
-                full_name: '测试用户1',
-                avatar: ''
-            }
-        },
-        {
-            id: 2,
-            friend_id: 1002,
-            pinned: false,
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            users: {
-                username: '123',
-                full_name: '测试用户2',
-                avatar: ''
-            }
-        },
-        {
-            id: 3,
-            friend_id: 1003,
-            pinned: false,
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-            users: {
-                username: 'plantlover',
-                full_name: '植物爱好者',
-                avatar: ''
-            }
-        }
+
     ];
 }
 
 // 从Supabase获取作品数据
-async function fetchWorksData(username, role) {
+async function fetchWorksData(username, role,full_name) {
     try {
         // 检查缓存
         if (dataCache.worksData && dataCache.worksData.username === username) {
@@ -1359,7 +1330,8 @@ async function fetchWorksData(username, role) {
         // 缓存数据
         dataCache.worksData = {
             username: username,
-            data: works
+            data: works,
+            full_name: full_name
         };
 
         return dataCache.worksData.data;
@@ -2590,7 +2562,7 @@ function loadWorksContent(filter = 'my-plants') {
                             <i class="fa fa-map-marker"></i> ${work.location || '未知位置'}
                         </span>
                         <span class="plant-meta-item">
-                            <i class="fa fa-user"></i> ${work.created_by || '未知用户'}
+                            <i class="fa fa-user"></i> ${work.created_by_full_name || '未知用户'}
                         </span>
                         <span class="plant-detail-btn" data-plant-id="${work.id}">查看详情</span>
                     </div>
@@ -2847,7 +2819,7 @@ function showPlantDetails(plantId) {
     document.getElementById('info-distribution').textContent = plant.location || '-';
     document.getElementById('info-environment').textContent = plant.environment || '-';
     document.getElementById('info-collection-date').textContent = plant.created_at ? new Date(plant.created_at).toLocaleDateString() : '-';
-    document.getElementById('info-created-by').textContent = plant.created_by || '未知';
+    document.getElementById('info-created-by').textContent = plant.created_by_full_name || '未知';
 
     const mainImage = plant.image_url || 'https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?w=400&h=300&fit=crop';
     document.getElementById('detail-image').src = mainImage;
@@ -4303,7 +4275,7 @@ async function submitPlantComment(plantId) {
         // 提交到数据库
         const commentData = {
             plant_id: currentCommentPlantId,
-            username: PlantState.currentUser,
+            username: currentUser,
             content: content,
             created_at: new Date().toISOString()
         };
@@ -4313,7 +4285,7 @@ async function submitPlantComment(plantId) {
             .insert([{
                 plant_id: plantId,
                 user_id: userData.id,
-                username: username,
+                username: currentUser,
                 content: content,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
