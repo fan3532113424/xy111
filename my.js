@@ -800,7 +800,6 @@ async function handleAddPlantSubmit(e) {
             description: document.getElementById('addPlantDescription').value.trim(),
             collection_date: document.getElementById('addPlantCollectionDate').value,
             created_by: localStorage.getItem('currentUser'),
-            created_by_full_name: localStorage.getItem('full_name')
         };
 
         // 如果有经纬度数据
@@ -2562,7 +2561,7 @@ function loadWorksContent(filter = 'my-plants') {
                             <i class="fa fa-map-marker"></i> ${work.location || '未知位置'}
                         </span>
                         <span class="plant-meta-item">
-                            <i class="fa fa-user"></i> ${work.created_by_full_name || '未知用户'}
+                            <i class="fa fa-user"></i> ${work.created_by || '未知用户'}
                         </span>
                         <span class="plant-detail-btn" data-plant-id="${work.id}">查看详情</span>
                     </div>
@@ -2819,9 +2818,9 @@ function showPlantDetails(plantId) {
     document.getElementById('info-distribution').textContent = plant.location || '-';
     document.getElementById('info-environment').textContent = plant.environment || '-';
     document.getElementById('info-collection-date').textContent = plant.created_at ? new Date(plant.created_at).toLocaleDateString() : '-';
-    document.getElementById('info-created-by').textContent = plant.created_by_full_name || '未知';
+    document.getElementById('info-created-by').textContent = plant.created_by || '未知';
 
-    const mainImage = plant.image_url || 'https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?w=400&h=300&fit=crop';
+    const mainImage = plant.image_url || '';
     document.getElementById('detail-image').src = mainImage;
     document.getElementById('detail-image').alt = plant.name;
 
